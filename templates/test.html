@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaChef</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('https://cdn.dribbble.com/users/2457279/screenshots/5874484/media/11a0f71d66f2346aae7f09a8e9d6627e.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #chatbox {
+            width: 100%;
+            max-width: 500px;
+            background-color:  #2e2e2e;/* Swiggy dark grey */
+            border-radius: 8px;
+            border: 2px solid #fc8019; /* Swiggy orange */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.9)), radial-gradient(circle at top left, #8B4513, #6F4F28);
+            background-origin: border-box;
+            background-clip: content-box, border-box;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transform: scale(0);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 999;
+        }
+        #title {
+            background-color: #fc8019; /* Swiggy orange for title */
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 22px;
+            background-image: linear-gradient(45deg, #fc8019, #fc8019);
+            animation: gradientBackground 3s ease infinite;
+        }
+        #logout-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #FFFFFF; /* Tomato color for logout button */
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            color: black;
+        }
+        #logout-button:hover {
+            background-color:  #fc8019; /* Tomato color on hover */
+            color:white;
+            border:1px solid  white;
+
+        }
+        #chat-content {
+            padding: 15px;
+            height: 60vh;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .message {
+            padding: 12px;
+            margin: 5px 0;
+            border-radius: 20px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user {
+            text-align: right;
+            background-color: #fc8019; /* Swiggy orange for user messages */
+            color: white;
+            align-self: flex-end;
+        }
+        .bot {
+            text-align: left;
+            background-color: #333; /* Darker shade for bot messages */
+            color: white;
+            align-self: flex-start;
+        }
+        #input-area {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #fc8019; /* Swiggy orange for input area */
+        }
+        #user-input {
+            width: 80%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #2c2c2c;
+            color: white;
+            margin-right: 5px;
+        }
+        #send-button, #voice-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease;
+        }
+        #send-button img, #voice-button img {
+            width: 24px;
+            height: 24px;
+        }
+        #send-button:hover, #voice-button:hover {
+            box-shadow: 0 0 10px #8B4513, 0 0 20px #8B4513, 0 0 30px #8B4513;
+        }
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px 0;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin: 0 2px;
+            background-color: #fc8019; /* Swiggy orange for typing indicator */
+            border-radius: 50%;
+            animation: typing 1s infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typing {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+        @keyframes gradientBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        #chatbox.show {
+            transform: scale(1);
+        }
+        #chat-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 70px;
+            height: 70px;
+            background-color:  #fc8019; /* Swiggy orange for chat toggle */
+            border-radius: 50%;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: bounce 2s infinite;
+        }
+        #chat-toggle img {
+            width: 32px;
+            height: 32px;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-15px);
+            }
+            60% {
+                transform: translateY(-7px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="chatbox">
+        <div id="title">InstaChef</div>
+        <div id="chat-content"></div>
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="Type a message..." />
+            <button id="send-button" onclick="sendMessage()">
+                <img src="https://tse4.mm.bing.net/th?id=OIP.YGJ0k39RK-nnA84BzdUzawAAAA&pid=Api&P=0&h=180" alt="Send">
+            </button>
+            <button id="voice-button" onclick="toggleVoiceRecognition()">
+                <img src="https://img.icons8.com/ios-filled/50/ffffff/microphone.png" alt="Voice">
+            </button>
+        </div>
+    </div>
+
+    <div id="chat-toggle" onclick="toggleChat()">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/speech-bubble.png" alt="Chat">
+    </div>
+
+    <script>
+        let recognizing = false;
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = function() {
+            recognizing = true;
+            console.log("Voice recognition started.");
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById("user-input").value = transcript;
+            sendMessage();
+        };
+
+        recognition.onerror = function(event) {
+            console.error("Speech recognition error:", event.error);
+        };
+
+        recognition.onend = function() {
+            recognizing = false;
+            console.log("Voice recognition ended.");
+        };
+
+        function toggleVoiceRecognition() {
+            if (recognizing) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+const specificIngredients = {
+    "turmeric powder": ["turmeric powder", "हल्दी", "மஞ்சள் தூள்", "ಹರಿದಿ ಪುಡಿ", "పసుపు పొడి", "হলুদ গুঁড়ো"],
+    "red chili powder": ["red chili powder", "लाल मिर्च पाउडर", "சிவப்பு மிளகாய் தூள்", "ಕೆಂಪು ಮೆಣಸಿನ ಪುಡಿ", "ఎర్ర మిర్చి పొడి", "লাল মরিচ গুঁড়ো"],
+    "coriander powder": ["coriander powder", "धनिया पाउडर", "கொத்தமல்லி தூள்", "ಕೊತ್ತಂಬರಿ ಪುಡಿ", "ధనియాల పొడి", "ধনে গুঁড়ো"],
+    "cumin powder": ["cumin powder", "जीरा पाउडर", "சீரக தூள்", "ಜೀರಿಗೆ ಪುಡಿ", "జీలకర్ర పొడి", "জিরা গুঁড়ো"],
+    "mustard seeds": ["mustard seeds", "सरसों के बीज", "கடுகு விதைகள்", "ಸಾಸಿವೆ", "ఆవాలు", "সরষের বীজ"],
+    "fennel seeds": ["fennel seeds", "सौंफ", "பெருஞ்சீரகம்", "ಸೊಂಪು", "సోంపు", "মৌরি"],
+    "fenugreek seeds": ["fenugreek seeds", "मेथी के बीज", "வெந்தயம்", "ಮೆಂತ್ಯ", "మెంతులు", "মেথি বীজ"],
+    "clove": ["clove", "लौंग", "கிராம்பு", "ಲವಂಗ", "లవంగాలు", "লবঙ্গ"],
+    "cardamom": ["cardamom", "इलायची", "ஏலக்காய்", "ಎಲಕ್ಕಿ", "ఏలకులు", "এলাচ"],
+    "cinnamon": ["cinnamon", "दालचीनी", "இலவங்கப்பட்டை", "ಚಕ್ಕೆ", "దాల్చిన చెక్క", "দারচিনি"],
+    "black pepper": ["black pepper", "काली मिर्च", "கருப்பு மிளகு", "ಕಪ್ಪು ಮೆಣಸು", "నల్ల మిరియాలు", "গোলমরিচ"],
+    "bay leaf": ["bay leaf", "तेज पत्ता", "பிரியாணி இலை", "ಬಿರಿಯಾನಿ ಎಲೆ", "బిర్యానీ ఆకు", "তেজপাতা"],
+    "star anise": ["star anise", "चक्र फूल", "அனிசிப் பூ", "ಚಕ್ರಫುಲ್", "అనసపువ్వు", "তারা ফুল"],
+    "asafoetida": ["asafoetida", "हींग", "பெருங்காயம்", "ಇಂಗು", "ఇంగువ", "হিং"],
+    "garam masala": ["garam masala", "गरम मसाला", "கரம் மசாலா", "ಗರಂ ಮಸಾಲಾ", "గరమ్ మసాలా", "গরম মসলা"],
+    "amchur powder": ["amchur powder", "अमचूर पाउडर", "மாங்காய் தூள்", "ಅಮಚೂರ್ ಪುಡಿ", "అమ్చూర్ పొడి", "আমচুর গুঁড়ো"],
+    "kasuri methi": ["kasuri methi", "कसूरी मेथी", "கசூரி வெந்தயம்", "ಕಸೂರಿ ಮೆಂತ್ಯ", "కసూరి మెంతి", "কাসুরি মেথি"],
+    "chat masala": ["chat masala", "चाट मसाला", "சாட் மசாலா", "ಚಾಟ್ ಮಸಾಲಾ", "చాట్ మసాలా", "চাট মসলা"],
+    "urad dal": ["urad dal", "उड़द दाल", "உளுந்து", "ಉದ್ದಿನ ಬೇಳೆ", "మినప్పప్పు", "বুট ডাল"],
+    "toor dal": ["toor dal", "तूर दाल", "துவரம் பருப்பு", "ತೊಗರಿ ಬೇಳೆ", "కందిపప్పు", "তুর ডাল"],
+    "chana dal": ["chana dal", "चना दाल", "கடலை பருப்பு", "ಕಡಲೆ ಬೇಳೆ", "శనగపప్పు", "ছোলা ডাল"],
+    "masoor dal": ["masoor dal", "मसूर दाल", "மசூர் பருப்பு", "ಮಸೂರು ಬೇಳೆ", "మసూరి పప్పు", "মসুর ডাল"],
+    "moong dal": ["moong dal", "मूंग दाल", "பயறு பருப்பு", "ಹೆಸರು ಬೇಳೆ", "పెసరపప్పు", "মুগ ডাল"],
+    "rajma": ["rajma", "राजमा", "ராஜ்மா", "ರಾಜ್ಮಾ", "రాజ్మా", "রাজমা"],
+    "kabuli chana": ["kabuli chana", "काबुली चना", "காபூலி சுண்டல்", "ಕಾಬುಲಿ ಕಡಲೆ", "కాబూలీ శనగలు", "কাবুলি ছোলা"],
+    "basmati rice": ["basmati rice", "बासमती चावल", "பாசுமதி அரிசி", "ಬಾಸ್ಮತಿ ಅಕ್ಕಿ", "బాస్మతి బియ్యం", "বাসমতি চাল"],
+    "sona masoori rice": ["sona masoori rice", "सोना मसूरी चावल", "சோனா மசூரி அரிசி", "ಸೋಣಾ ಮಸೂರಿ ಅಕ್ಕಿ", "సోనా మసూరి బియ్యం", "সোনা মসূরি চাল"],
+    "brown rice": ["brown rice", "ब्राउन चावल", "பழுப்பு அரிசி", "ಬ್ರೌನ್ ಅಕ್ಕಿ", "బ్రౌన్ రైస్", "বাদামি চাল"],
+    "wheat flour": ["wheat flour", "गेहूं का आटा", "கோதுமை மா", "ಗೋಧಿ ಹಿಟ್ಟು", "గోధుమ పిండి", "গমের আটা"],
+    "whole wheat flour": ["whole wheat flour", "संपूर्ण गेहूं का आटा", "முழு கோதுமை மா", "ಪೂರ್ಣ ಗೋಧಿ ಹಿಟ್ಟು", "పూర్తి గోధుమ పిండి", "সম্পূর্ণ গমের আটা"],
+    "rice flour": ["rice flour", "चावल का आटा", "அரிசி மாவு", "ಅಕ್ಕಿ ಹಿಟ್ಟು", "బియ్యం పిండి", "চালের আটা"],
+    "rava": ["rava", "रवा", "ரவை", "ರವೆ", "రవ్వ", "রব্বা"],
+    "cornflour": ["cornflour", "मकई का आटा", "சோளம் மாவு", "ಮೆಕ್ಕೆಜೋಳ ಹಿಟ್ಟು", "మొక్కజొన్న పిండి", "ভুট্টার আটা"],
+    "jowar": ["jowar", "ज्वार", "சோளம்", "ಜೋಳ", "జొన్న", "জোয়ার"],
+    "bajra": ["bajra", "बाजरा", "கம்பு", "ಸಜ್ಜೆ", "సజ్జ", "বাজরা"],
+    "oats": ["oats", "जई", "ஓட்ஸ்", "ಓಟ್ಸ್", "ఓట్స్", "ওটস"],
+    "onion": ["onion", "प्याज", "வெங்காயம்", "ಈರುಳ್ಳಿ", "ఉల్లిపాయ", "পেঁয়াজ"],
+    "tomato": ["tomato", "टमाटर", "தக்காளி", "ಟೊಮೆಟೊ", "టమాట", "টমেটো"],
+    "potato": ["potato", "आलू", "உருளைக்கிழங்கு", "ಅಲೂಗೆಡ್ಡೆ", "బంగాళాదుంప", "আলু"],
+    "garlic": ["garlic", "लहसुन", "பூண்டு", "ಬೆಳ್ಳುಳ್ಳಿ", "వెల్లులి", "রসুন"],
+    "ginger": ["ginger", "अदरक", "இஞ்சி", "ಶುಂಠಿ", "అల్లం", "আদা"],
+    "carrot": ["carrot", "गाजर", "காரட்", "ಗಾಜರ", "కారెట్", "গাজর"],
+    "cauliflower": ["cauliflower", "फूलगोभी", "கோசு", "ಹೂಕೋಸು", "పూవు కోసు", "ফুলকপি"],
+    "broccoli": ["broccoli", "ब्रोकली", "ப்ரோக்கொலி", "ಬ್ರೋಕೋಲಿ", "బ్రోకలీ", "ব্রকোলি"],
+    "cabbage": ["cabbage", "पत्ता गोभी", "முட்டைகோசு", "ಎಲೆಕೋಸು", "గోబీ ఆకులు", "বাঁধাকপি"],
+    "spinach": ["spinach", "पालक", "கீரை", "ಪಾಲಕ್", "పాలకూర", "পালং শাক"],
+    "methi": ["fenugreek", "मेथी", "வெந்தயம்", "ಮೆಂತ್ಯ", "మెంతి", "মেথি"],
+    "palak": ["spinach", "पालक", "பசலைக் கீரை", "ಪಾಲಕ್", "పాలకూర", "পালং শাক"],
+    "bottle gourd": ["bottle Gourd", "लौकी", "சுரைக்காய்", "ಸೋರಕಾಯಿ", "సొరకాయ", "লাউ"],
+    "pumpkin": ["pumpkin", "कद्दू", "பரங்கிக்காய்", "ಕುಂಬಳಕಾಯಿ", "గుమ్మడికాయ", "কুমড়ো"],
+    "brinjal": ["brinjal", "बैंगन", "கத்தரிக்காய்", "ಬದನೆಕಾಯಿ", "వంకాయ", "বেগুন"],
+    "okra": ["Okra", "भिंडी", "வெண்டை", "ಬೆಂಡೆಕಾಯಿ", "బెండకాయ", "ঢেঁড়স"],
+    "bell peppers": ["bell peppers", "शिमला मिर्च", "குடைமிளகாய்", "ಶಿಮ್ಲಾ ಮೆಣಸಿನಕಾಯಿ", "శిమ్లా మిర్చి", "ক্যাপসিকাম"],
+    "beans": ["beans", "फली", "பயத்தம்", "ಹುರಳಿಕಾಯಿ", "బీన్స్", "শিম"],
+    "peas": ["peas", "मटर", "பட்டாணி", "ಬಟಾಣಿ", "పచ్చి బటాణీ", "মটর"],
+    "mushrooms": ["mushrooms", "कुम्भी", "காளான்", "ಅಣಬೆ", "కాళ్లు", "মাশরুম"],
+    "radish": ["radish", "मूली", "முள்ளங்கி", "ಮೂಲಂಗಿ", "ముల్లంగి", "মূলা"],
+    "turnip": ["turnip", "शलजम", "சிகப்புக்கிழங்கு", "ಶಲಗಂ", "శలగము", "শালগম"],
+    "beets": ["beets", "चुकंदर", "குமிழ்கிழங்கு", "ಬೀಟ್ರೂಟ್", "బీట్‌రూట్", "বিট"],
+    "coriander leaves": ["coriander leaves", "धनिया पत्तियां", "கொத்தமல்லி இலைகள்", "ಕೊತ್ತಂಬರಿ ಸೊಪ್ಪು", "కొత్తిమీర", "ধনেপাতা"],
+    "mint leaves": ["mint leaves", "पुदीना पत्तियां", "புதினா இலைகள்", "ಪುದೀನಾ ಎಲೆ", "పుదీనా ఆకులు", "পুদিনা পাতা"],
+    "curry leaves": ["curry leaves", "कड़ी पत्ता", "கருவேப்பிலை", "ಕರಿಬೇವು", "కరివేపాకు", "কারি পাতা"],
+    "lemon": ["lemon", "नींबू", "எலுமிச்சை", "ನಿಂಬೆ", "నిమ్మకాయ", "লেবু"],
+    "lime": ["lime", "नींबू", "சிறு எலுமிச்சை", "ಲೈಮ್", "లైమ్", "লেবু"],
+    "milk": ["milk", "दूध", "பால்", "ಹಾಲು", "పాలు", "দুধ"],
+    "fish": ["fish", "मछली", "மீன்", "ಮೀನು", "మీనం", "মাছ"],
+    "curd": ["curd", "दही", "மோர்", "ಮಜ್ಜಿಗೆ", "పెరుగు", "দই"],
+    "ghee": ["ghee", "घी", "நெய்", "ತೂಪ್ಪ", "నెయ్యి", "ঘি"],
+    "butter": ["butter", "मक्खन", "வெண்ணெய்", "ಬೆಣ್ಣೆ", "వెన్న", "মাখন"],
+    "paneer": ["paneer", "पनीर", "பனீர்", "ಪನೀರ್", "పనీర్", "পনির"],
+    "cheese": ["cheese", "चीज", "சீஸ்", "ಚೀಸ್", "చీజ్", "চিজ"],
+    "almonds": ["almonds", "बादाम", "முந்திரி", "ಬಾದಾಮಿ", "బాదం", "বাদাম"],
+    "cashews": ["cashews", "काजू", "முந்திரிப்பருப்பு", "ಗೋಡಂಬಿ", "కాజూ", "কাজু"],
+    "pistachios": ["pistachios", "पिस्ता", "பிஸ்தா", "ಪಿಸ್ತು", "పిస్తా", "পিস্তাচিও"],
+    "walnuts": ["walnuts", "अखरोट", "அக்ரோட்", "ಅಕ್ರೋಟ್", "అక్రోట్", "আখরোট"],
+    "raisins": ["raisins", "किशमिश", "உலர்ந்த திராட்சை", "ಒಣ ದ್ರಾಕ್ಷಿ", "ఎండుద్రాక్ష", "কিশমিশ"],
+    "dates": ["dates", "खजूर", "பேரிச்சம்பழம்", "ಖರ್ಜೂರ", "ఖర్జూరం", "খেজুর"],
+    "dried apricots": ["dried apricots", "सूखे खुबानी", "உலர் அப்ரிகோட்", "ಒಣ ಹಣ್ಣು", "ఎండిన ఖర్జూరాలు", "শুকনো এপ্রিকট"],
+    "dried figs": ["dried figs", "सूखे अंजीर", "உலர்ந்த அத்திப்பழம்", "ಒಣ ಅಂಜೂರ", "ఎండిన అంజీరు", "শুকনো ডুমুর"],
+    "oil": ["oil", "तेल", "எண்ணெய்", "ಎಣ್ಣೆ", "నూనె", "তেল"],
+    "salt": ["salt", "नमक", "உப்பு", "ಬೆಲ್ಲು", "ఉప్పు", "লবণ"],
+    "sugar": ["sugar", "चीनी", "சர்க்கரை", "ಸಕ್ಕರೆ", "చక్కెర", "চিনি"],
+    "jaggery": ["jaggery", "गुड़", "வெல்லம்", "ಬೆಲ್ಲ", "బెల్లం", "গুড়"],
+    "honey": ["honey", "शहद", "தேன்", "ಜೇನು", "తేనె", "মধু"],
+    "vinegar": ["vinegar", "सिरका", "வினிகர்", "ವಿನೆಗರ್", "వినెగర్", "ভিনেগার"],
+    "baking soda": ["baking soda", "सोडा", "சோடா", "ಬೇಕಿಂಗ್ ಸೋಡಾ", "బేకింగ్ సోడా", "সোডা"],
+    "baking powder": ["baking powder", "बेकिंग पाउडर", "பேக்கிங் பவுடர்", "ಬೇಕಿಂಗ್ ಪೌಡರ್", "బేకింగ్ పౌడర్", "বেকিং পাউডার"],
+    "food color": ["food color", "खाद्य रंग", "உணவு நிறம்", "ಆಹಾರ ಬಣ್ಣ", "ఆహార రంగు", "খাদ্য রং"],
+    "saffron": ["saffron", "केसर", "குங்குமப்பூ", "ಕುಂಕುಮಪು", "కుంకుమపువ్వు", "জাফরান"],
+    "green cardamom pods": ["green cardamom pods", "हरी इलायची", "பச்சை ஏலக்காய்", "ಹಸಿರು ಏಲಕ್ಕಿ", "పచ్చ ఏలకులు", "সবুজ এলাচ"],
+    "black cardamom pods": ["black cardamom pods", "काली इलायची", "கருப்பு ஏலக்காய்", "ಕಪ್ಪು ಏಲಕ್ಕಿ", "నల్ల ఏలకులు", "কালো এলাচ"],
+    "poppy seeds": ["poppy seeds", "खसखस", "கசகசா", "ಗಸಗಸೆ", "గసగసాలు", "পোস্ত"],
+    "flax seeds": ["flax seeds", "अलसी के बीज", "ஆளி விதைகள்", "ಅಗಸೆ ಬೀಜ", "ఆవాలువిత్తనాలు", "তিসির বীজ"],
+    "sesame seeds": ["sesame seeds", "तिल", "எள் விதைகள்", "ಎಳ್ಳು", "నువ్వులు", "তিল"],
+    "coconut flakes": ["coconut flakes", "नारियल के गुच्छे", "தேங்காய் துருவல்", "ತರುಟು ತೆಂಗಿನಕಾಯಿ", "కోబ్బరి తురుము", "নারকেল কুঁচি"],
+    "coconut milk": ["coconut milk", "नारियल का दूध", "தேங்காய் பால்", "ತೆಂಗಿನ ಹಾಲು", "కొబ్బరిపాలు", "নারকেল দুধ"],
+    "mustard paste": ["mustard paste", "सरसों का पेस्ट", "கடுகு பேஸ்ட்", "ಸಾಸಿವೆ ಪೇಸ್ಟ್", "ఆవపేస్ట్", "সরষে পেস্ট"],
+    "tomato paste": ["tomato paste", "टमाटर का पेस्ट", "தக்காளி பேஸ்ட்", "ಟೊಮೆಟೊ ಪೇಸ್ಟ್", "టమోటా పేస్ట్", "টমেটো পেস্ট"],
+    "chilli flakes": ["chilli flakes", "मिर्च के गुच्छे", "மிளகாய் துண்டுகள்", "ಮೆಣಸಿನ ಹುಡಿ", "మిరపకాయల పొడి", "মরিচের ফ্লেক্স"],
+    "chicken stock": ["chicken stock", "चिकन स्टॉक", "கோழி சதுரம்", "ಚಿಕನ್ ಸ್ಟಾಕ್", "చికెన్ స్టాక్", "চিকেন স্টক"],
+    "vegetable stock": ["vegetable stock", "सब्जी स्टॉक", "காய்கறி சதுரம்", "ತರುಟು ತರಕಾರಿ", "కూరగాయల స్టాక్", "সবজি স্টক"],
+    "rice": ["rice", "चावल", "அரிசி", "ಅಕ್ಕಿ", "బియ్యం", "চাল"]
+};
+
+    async function sendMessage() {
+     let userInput = document.getElementById("user-input").value.trim().toLowerCase(); // Convert input to lowercase for case-insensitive matching
+    if (userInput === "") return;
+
+    // Remove any extra spaces
+    userInput = userInput.replace(/\s+/g, ' ');
+
+    displayMessage(userInput, "user");
+    displayTypingIndicator();
+
+    // Check if the user input matches any specific ingredient in any language
+    let matchedIngredient = null;
+    for (const [englishName, translations] of Object.entries(specificIngredients)) {
+        if (translations.includes(userInput)) {
+            matchedIngredient = englishName;
+            break; // Stop once we find a match
+        }
+    }
+
+    if (matchedIngredient) {
+        // Open Instamart search for the specific ingredient in English
+        const instamartUrl = `https://www.swiggy.com/instamart/search?custom_back=true&query=${encodeURIComponent(matchedIngredient)}`;
+        window.open(instamartUrl, '_blank');
+        removeTypingIndicator();
+        displayMessage(`Searching for ${matchedIngredient} on Instamart...`, "bot");
+    } else {
+        // Handle other inputs, such as recipes or more complex sentences
+        try {
+            const response = await fetch("/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message: userInput }) // Removed user_id
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            removeTypingIndicator();
+            displayMessage(data.response, "bot");
+        } catch (error) {
+            console.error("Error:", error);
+            removeTypingIndicator();
+        }
+    }
+
+    document.getElementById("user-input").value = ""; // Clear input field
+}
+        function displayMessage(message, sender) {
+            const chatContent = document.getElementById("chat-content");
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = message;
+            chatContent.appendChild(messageDiv);
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
+
+        function displayTypingIndicator() {
+            const chatContent = document.getElementById("chat-content");
+            const typingDiv = document.createElement("div");
+            typingDiv.className = "typing-indicator";
+            typingDiv.id = "typing-indicator";
+            typingDiv.innerHTML = `
+                <span></span>
+                <span></span>
+                <span></span>
+            `;
+            chatContent.appendChild(typingDiv);
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById("typing-indicator");
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function toggleChat() {
+            const chatbox = document.getElementById("chatbox");
+            chatbox.classList.toggle("show");
+        }
+
+    </script>
+</body>
+</html>
